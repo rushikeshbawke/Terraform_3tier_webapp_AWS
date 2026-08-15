@@ -95,6 +95,7 @@ route_table_id = aws_route_table.public.id
 }
 
 #----- Route Table Private ------
+
 resource "aws_route_table" "private" {
 vpc_id = aws_vpc.main.id
 
@@ -110,3 +111,30 @@ route_table_id = aws_route_table.private.id
 }
 }
 
+#----- Route Table DB ------
+
+resource "aws_route_table" "db" {
+vpc_id = aws_vpc.main.id
+
+tags = {
+Name = "main-db-route-table"
+}
+}
+
+resource "aws_route_table_association" "db" {
+subnet_id = aws_subnet.db.id
+route_table_id = aws_route_table.db.id
+}
+
+#----- AWS VPC Flow Logs ------
+
+resource "aws_flow_log" "vpc_flow_log" {
+vpc_id = aws_vpc.main.id
+log_destination = aws_s3_bucket.flow_logs.arn
+traffic_type = "ALL"
+log_destination_type = "aws_s3_bucket"
+
+tags = {
+Name = "main-vpc-flow-log"
+}
+}
