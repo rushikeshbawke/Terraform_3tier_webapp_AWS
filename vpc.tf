@@ -19,7 +19,7 @@ Name = "main-igw"
 }
 }
 
-#------ Public Subnet ------
+#------ Public Subnet -> Web-tier ------
 
 resource "aws_subnet" "public" {
 vpc_id = aws_vpc.main.id
@@ -32,7 +32,7 @@ Name = "main-public-subnet"
 }
 }
 
-#----- Private Subnet ------
+#----- Private Subnet -> App-tier ------
 
 resource "aws_subnet" "private" {
 vpc_id = aws_vpc.main.id
@@ -43,6 +43,18 @@ tags = {
 Name = "main-private-subnet"
 }
 }
+
+#----- Private Subnet -> DB-tier ------
+resource "aws_subnet" "db" {
+vpc_id = aws_vpc.main.id
+cidr_block = "12.5.3.0/24"
+availability_zone = "ap-south-1a"
+
+tags = {
+Name = "main-db-subnet"
+}
+}
+
 #----- NAT Gateway ------
 
 resource "aws_eip" "nat" {
