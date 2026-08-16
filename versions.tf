@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.0.0"
 
   required_providers {
     aws = {
@@ -16,7 +16,7 @@ terraform {
     bucket         = "terraform-state-12-5"
     key            = "terraform.tfstate"
     region         = "ap-south-1"
-    use_lockfile = "terraform-locks"
+    use_lockfile   = true
     encrypt        = true
   }
 }
