@@ -1,13 +1,13 @@
 # -------- route53 hosted zone (optional - only if domain name is set) ----------
 
 resource "aws_route53_zone" "main" {
-count = var.domain_name != "" && var.create_route53_zone ? 1 : 0
-name = var.domain_name
+  count = var.domain_name != "" && var.create_route53_zone ? 1 : 0
+  name  = var.domain_name
 }
 
 data "aws_route53_zone" "existing" {
-count = var.domain_name != "" && var.create_route53_zone ? 1 : 0
-name = var.domain_name
+  count = var.domain_name != "" && var.create_route53_zone ? 1 : 0
+  name  = var.domain_name
 }
 
 locals {
@@ -19,12 +19,12 @@ locals {
 # --------- Cloudfront distribution in front of external ALB ---------
 
 resource "aws_cloudfront_distribution" "main" {
-count = var.domain_name != "" ? 1 : 0
-enabled = true
-is_ipv6_enabled = true
-comment = "Cloudfront CDN in front of external ALB"
-aliases = [var.domain_name]
-default_root_object = ""
+  count               = var.domain_name != "" ? 1 : 0
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "Cloudfront CDN in front of external ALB"
+  aliases             = [var.domain_name]
+  default_root_object = ""
 
   origin {
     domain_name = aws_lb.external.dns_name
@@ -37,7 +37,7 @@ default_root_object = ""
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
@@ -69,22 +69,25 @@ default_root_object = ""
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
-  tags = { Name = "${var.project_name}-cloudfront" }
+  tags = { Name = "webapp-cloudfront" }
 }
-}
+
 
 # -------- ACM certificate for Cloudfront ----------
 
 resource "aws_acm_certificate" "main" {
   count             = var.domain_name != "" ? 1 : 0
-  provider          = "aws"
+  provider          = aws
   domain_name       = var.domain_name
   validation_method = "DNS"
 
+  /*
   lifecycle {
     create_before_destroy = true
   }
+*/
 }
+
 
 resource "aws_route53_record" "acm_validation" {
   for_each = var.domain_name != "" ? {

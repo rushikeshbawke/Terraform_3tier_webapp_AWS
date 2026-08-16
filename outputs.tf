@@ -11,17 +11,17 @@ output "app_subnet_ids" {
 }
 
 output "db_subnet_ids" {
-  value = aws_subnet.db.id
+  value = aws_subnet.db[*].id
 }
 
 output "external_alb_dns_name" {
   description = "Public DNS name of the internet-facing ALB"
-  value       = aws_lb.external_alb.dns_name
+  value       = aws_lb.external.dns_name
 }
 
 output "internal_alb_dns_name" {
   description = "Internal DNS name of the app-tier ALB"
-  value       = aws_lb.internal_alb.dns_name
+  value       = aws_lb.internal.dns_name
 }
 
 output "cloudfront_domain_name" {

@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "main" {
   name       = "db-subnet-group"
-  subnet_ids = aws_subnet.db.id
+  subnet_ids = aws_subnet.db[*].id
 
   tags = { Name = "db-subnet-group" }
 }
@@ -39,11 +39,11 @@ resource "aws_db_instance" "main" {
   username = var.db_username
   password = random_password.db_password.result
 
-  multi_az               = false
+  multi_az               = true
   db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.db.id]
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
 
-  availability_zone = var.availability_zone
+  availability_zone = var.db_availability_zones[0]
 
   backup_retention_period = 7
   backup_window           = "03:00-04:00"

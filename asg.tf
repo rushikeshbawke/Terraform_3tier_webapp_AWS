@@ -14,22 +14,22 @@ data "aws_ami" "latest_linux" {
 }
 
 locals {
-    web_ami = coalesce(var.web_ami, data.aws_ami.latest_linux.id)   # returns the first non null, non empty value from the list of arguments.
-    app_ami = coalesce(var.app_ami, data.aws_ami.latest_linux.id)
+  web_ami = coalesce(var.web_ami, data.aws_ami.latest_linux.id) # returns the first non null, non empty value from the list of arguments.
+  app_ami = coalesce(var.app_ami, data.aws_ami.latest_linux.id)
 }
 
 # ------- web tier - Launch template and ASG -------
 
 resource "aws_launch_template" "web" {
-  name_prefix = "web-launch-template-"
-  image_id    = local.web_ami
+  name_prefix   = "web-launch-template-"
+  image_id      = local.web_ami
   instance_type = var.web_instance_type
-  key_name = var.ssh_key_name != "" ? var.ssh_key_name : null
+  key_name      = var.ssh_key_name != "" ? var.ssh_key_name : null
 
-  vpc_security_group_ids = [aws_security_group.web.id]
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.web_profile.name
+    name = aws_iam_instance_profile.ec2_profile.name
   }
 
   # lifecycle {
@@ -37,8 +37,8 @@ resource "aws_launch_template" "web" {
   #}
 
   metadata_options {
-    http_tokens = "required"   # IMDSv2 only => IIMDSv2 requires a session token for every metadata request, preventing unauthorized access.
-    http_endpoint = "enabled"   # Ensures the metadata service endpoint (http://169.254.169.254) is accessible from the instance.
+    http_tokens   = "required" # IMDSv2 only => IIMDSv2 requires a session token for every metadata request, preventing unauthorized access.
+    http_endpoint = "enabled"  # Ensures the metadata service endpoint (http://169.254.169.254) is accessible from the instance.
   }
 
   monitoring {
@@ -78,10 +78,10 @@ resource "aws_autoscaling_group" "web" {
   max_size                  = var.web_asg_max_size
   min_size                  = var.web_asg_min_size
   desired_capacity          = var.web_asg_desired_capacity
-  vpc_zone_identifier       = var.public_subnet_ids
-  target_group_arns         = [aws_lb_target_group.web.arn]
+  vpc_zone_identifier       = [aws_subnet.public.id]
+  target_group_arns         = [aws_lb_target_group.external_alb_tg.arn]
   health_check_type         = "ELB"
-  health_check_grace_period = 300    # ASG setting that controls how long the ASG waits before starting to evaluate the health of a newly launched instance.
+  health_check_grace_period = 300 # ASG setting that controls how long the ASG waits before starting to evaluate the health of a newly launched instance.
   launch_template {
     id      = aws_launch_template.web.id
     version = "$Latest"
@@ -90,7 +90,7 @@ resource "aws_autoscaling_group" "web" {
   tag {
     key                 = "Name"
     value               = "web-instance"
-    propagate_at_launch = true       # Whenever this ASG launches a new EC2 instance, automatically apply this tag to that instance too.
+    propagate_at_launch = true # Whenever this ASG launches a new EC2 instance, automatically apply this tag to that instance too.
   }
 
   tag {
@@ -101,21 +101,21 @@ resource "aws_autoscaling_group" "web" {
 }
 
 resource "aws_autoscaling_policy" "web_scale_out" {
-name = "web-scale_out"
-autoscaling_group_name = aws_autoscaling_group.web.name
-policy_type = "TargetTrackingScaling"
-target_tracking_configuration {
-predefined_metric_specification {
-    predefined_metric_type = "ASGAverageCPUUtilization"
+  name                   = "web-scale_out"
+  autoscaling_group_name = aws_autoscaling_group.web.name
+  policy_type            = "TargetTrackingScaling"
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
     }
     target_value = 60.0
   }
 }
 
 resource "aws_autoscaling_policy" "web_scale_in" {
-  name = "web-scale_in"
+  name                   = "web-scale_in"
   autoscaling_group_name = aws_autoscaling_group.web.name
-  policy_type = "TargetTrackingScaling"
+  policy_type            = "TargetTrackingScaling"
   target_tracking_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
@@ -127,19 +127,19 @@ resource "aws_autoscaling_policy" "web_scale_in" {
 # ------- app tier - Launch template and ASG -------
 
 resource "aws_launch_template" "app" {
-  name_prefix = "app-launch-template-"
-  image_id    = local.app_ami
+  name_prefix   = "app-launch-template-"
+  image_id      = local.app_ami
   instance_type = var.app_instance_type
-  key_name = var.ssh_key_name != "" ? var.ssh_key_name : null
+  key_name      = var.ssh_key_name != "" ? var.ssh_key_name : null
 
-  vpc_security_group_ids = [aws_security_group.app.id]
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.app_profile.name
+    name = aws_iam_instance_profile.ec2_profile.name
   }
 
   metadata_options {
-    http_tokens = "required"
+    http_tokens   = "required"
     http_endpoint = "enabled"
   }
 
@@ -185,8 +185,8 @@ resource "aws_autoscaling_group" "app" {
   max_size                  = var.app_asg_max_size
   min_size                  = var.app_asg_min_size
   desired_capacity          = var.app_asg_desired_capacity
-  vpc_zone_identifier       = var.private_subnet_ids
-  target_group_arns         = [aws_lb_target_group.app.arn]
+  vpc_zone_identifier       = [aws_subnet.private.id]
+  target_group_arns         = [aws_lb_target_group.internal_alb_tg.arn]
   health_check_type         = "ELB"
   health_check_grace_period = 300
   launch_template {
@@ -208,9 +208,9 @@ resource "aws_autoscaling_group" "app" {
 }
 
 resource "aws_autoscaling_policy" "app_scale_out" {
-  name = "app-scale_out"
+  name                   = "app-scale_out"
   autoscaling_group_name = aws_autoscaling_group.app.name
-  policy_type = "TargetTrackingScaling"
+  policy_type            = "TargetTrackingScaling"
   target_tracking_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
@@ -220,9 +220,9 @@ resource "aws_autoscaling_policy" "app_scale_out" {
 }
 
 resource "aws_autoscaling_policy" "app_scale_in" {
-  name = "app-scale_in"
+  name                   = "app-scale_in"
   autoscaling_group_name = aws_autoscaling_group.app.name
-  policy_type = "TargetTrackingScaling"
+  policy_type            = "TargetTrackingScaling"
   target_tracking_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"

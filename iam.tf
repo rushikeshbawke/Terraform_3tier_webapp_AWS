@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "app_s3_access" {
 }
 
 resource "aws_iam_role_policy" "app_s3_access" {
-  name   = "$app-s3-access"
+  name   = "app-s3-access"
   role   = aws_iam_role.ec2_role.id
   policy = data.aws_iam_policy_document.app_s3_access.json
 }

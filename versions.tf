@@ -13,10 +13,20 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "terraform-state-12-5"
-    key            = "terraform.tfstate"
-    region         = "ap-south-1"
-    use_lockfile   = true
-    encrypt        = true
+    bucket       = "terraform-state-3tier-webapp-bucket"
+    key          = "terraform.tfstate"
+    region       = "ap-south-1"
+    use_lockfile = true
+    encrypt      = true
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+   default_tags {
+    tags = {
+      Environment = "production"
+      ManagedBy   = "terraform"
+    }
   }
 }

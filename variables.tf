@@ -19,41 +19,41 @@ variable "my_ip_cidr" {
 # --------- VPC & subnets ------------
 
 variable "vpc_cidr" {
-description = "CIDR of main vpc"
-type = string
-default = "12.5.0.0/16"
+  description = "CIDR of main vpc"
+  type        = string
+  default     = "12.5.0.0/16"
 }
 
 variable "availability_zone" {
-description = "availability zone"
-type = string
-default = "ap-south-1a"
+  description = "availability zone"
+  type        = string
+  default     = "ap-south-1a"
 }
 
 variable "public_subnet_cidr" {
-description = "CIDR for web tier subnet"
-type = string
-default = "12.5.1.0/24"
+  description = "CIDR for web tier subnet"
+  type        = string
+  default     = "12.5.1.0/24"
 }
 
 variable "private_subnet_cidr" {
-description = "CIDR for app tier subnet"
-type = string
-default = "12.5.2.0/24"
+  description = "CIDR for app tier subnet"
+  type        = string
+  default     = "12.5.2.0/24"
 }
 
 variable "db_subnet_cidr" {
-description = "CIDR for db tier subnet"
-type = string
-default = "12.5.3.0/24"
+  description = "CIDR for db tier subnet"
+  type        = list(string)
+  default     = ["12.5.3.0/24","12.5.13.0/24"]
 }
 
 # ---------  Notifictions -------------
 
 variable "user_email" {
-    description = "The email address to receive notifications and alerts."
-    type        = string
-    default    = "rushikeshbawke0000@gmail.com"
+  description = "The email address to receive notifications and alerts."
+  type        = string
+  default     = "rushikeshbawke0000@gmail.com"
 }
 
 # --------- web tier variables ---------
@@ -65,18 +65,18 @@ variable "web_instance_type" {
 }
 
 variable "web_ami" {
-description = "The pre-configured image used by orgnaization"
-type = string
-default = null
+  description = "The pre-configured image used by orgnaization"
+  type        = string
+  default     = null
 }
 
-variable "web_min_size" {
+variable "web_asg_min_size" {
   description = "The minimum number of EC2 instances in the web tier."
   type        = number
   default     = 1
 }
 
-variable "web_max_size" {
+variable "web_asg_max_size" {
   description = "The maximum number of EC2 instances in the web tier."
   type        = number
   default     = 3
@@ -102,18 +102,18 @@ variable "app_instance_type" {
 }
 
 variable "app_ami" {
-description = "The pre-configured image used by orgnaization"
-type = string
-default = null
+  description = "The pre-configured image used by orgnaization"
+  type        = string
+  default     = null
 }
 
-variable "app_min_size" {
+variable "app_asg_min_size" {
   description = "The minimum number of EC2 instances in the app tier."
   type        = number
   default     = 1
 }
 
-variable "app_max_size" {
+variable "app_asg_max_size" {
   description = "The maximum number of EC2 instances in the app tier."
   type        = number
   default     = 3
@@ -160,6 +160,12 @@ variable "db_name" {
 variable "db_username" {
   type    = string
   default = "dbadmin"
+}
+
+variable "db_availability_zones" {
+  description = "AZs to deploy into (must match subnet CIDR list length)"
+  type        = list(string)
+  default     = ["ap-south-1a", "ap-south-1b"]
 }
 
 # ---- Route53 / CloudFront ----

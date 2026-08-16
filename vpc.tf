@@ -1,140 +1,138 @@
 # ---------- VPC ----------
-
 resource "aws_vpc" "main" {
-cidr_block = var.vpc_cidr
-enable_dns_support = true
-enable_dns_hostnames = true
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 
-tags = {
-Name = "main-vpc"
+  tags = {
+    Name = "main-vpc"
+  }
 }
 
-#------ Internet Gateway ------
-
+# ---------- Internet Gateway ----------
 resource "aws_internet_gateway" "main" {
-vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main.id
 
-tags = {
-Name = "main-igw"
+  tags = {
+    Name = "main-igw"
+  }
 }
-}
 
-#------ Public Subnet -> Web-tier ------
-
+# ---------- Public Subnet -> Web-tier ----------
 resource "aws_subnet" "public" {
-vpc_id = aws_vpc.main.id
-cidr_block = var.public_subnet_cidr
-map_public_ip_on_launch = true
-availability_zone = var.availability_zone
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidr
+  map_public_ip_on_launch = true
+  availability_zone       = var.availability_zone
 
-tags = {
-Name = "main-public-subnet"
+  tags = {
+    Name = "main-public-subnet"
+  }
 }
-}
 
-#----- Private Subnet -> App-tier ------
-
+# ---------- Private Subnet -> App-tier ----------
 resource "aws_subnet" "private" {
-vpc_id = aws_vpc.main.id
-cidr_block = var.private_subnet_cidr
-availability_zone = var.availability_zone
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.private_subnet_cidr
+  availability_zone = var.availability_zone
 
-tags = {
-Name = "main-private-subnet"
-}
+  tags = {
+    Name = "main-private-subnet"
+  }
 }
 
-#----- Private Subnet -> DB-tier ------
+# ---------- Private Subnet -> DB-tier ----------
 resource "aws_subnet" "db" {
-vpc_id = aws_vpc.main.id
-cidr_block = var.db_subnet_cidr
-availability_zone = var.availability_zone
+  count             = length(var.db_subnet_cidr)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.db_subnet_cidr[count.index]
+  availability_zone = var.db_availability_zones[count.index]
 
-tags = {
-Name = "main-db-subnet"
+  tags = {
+    Name = "main-db-subnet-${var.db_availability_zones[count.index]}"
+  }
 }
-}
 
-#----- NAT Gateway ------
-
+# ---------- NAT Gateway ----------
 resource "aws_eip" "nat" {
-domain = "vpc"
+  domain = "vpc"
 
-tags = {
-Name = "main-nat-eip"
-}
+  tags = {
+    Name = "main-nat-eip"
+  }
 }
 
 resource "aws_nat_gateway" "main" {
-allocation_id = aws_eip.nat.id
-subnet_id = aws_subnet.public.id
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
 
-tags = {
-Name = "main-nat-gateway"   
+  tags = {
+    Name = "main-nat-gateway"
+  }
 }
-}
 
-#----- Route Table Public ------
-
+# ---------- Route Table: Public ----------
 resource "aws_route_table" "public" {
-vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main.id
 
-route {
-cidr_block = "0.0.0.0/0"
-gateway_id = aws_internet_gateway.main.id
-}
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
 
-tags = {
-Name = "main-public-route-table"
-}
+  tags = {
+    Name = "main-public-route-table"
+  }
 }
 
 resource "aws_route_table_association" "public" {
-subnet_id = aws_subnet.public.id
-route_table_id = aws_route_table.public.id
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
 }
 
-#----- Route Table Private ------
-
+# ---------- Route Table: Private ----------
 resource "aws_route_table" "private" {
-vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main.id
 
-route {
-cidr_block = "0.0.0.0/0"
-nat_gateway_id = aws_nat_gateway.main.id
-}
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
+
+  tags = {
+    Name = "main-private-route-table"
+  }
 }
 
 resource "aws_route_table_association" "private" {
-subnet_id = aws_subnet.private.id
-route_table_id = aws_route_table.private.id
-}
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.private.id
 }
 
-#----- Route Table DB ------
-
+# ---------- Route Table: DB ----------
 resource "aws_route_table" "db" {
-vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main.id
+  count  = length(var.db_subnet_cidr)
 
-tags = {
-Name = "main-db-route-table"
-}
+  tags = {
+    Name = "main-db-route-table-${var.db_availability_zones[count.index]}"
+  }
 }
 
 resource "aws_route_table_association" "db" {
-subnet_id = aws_subnet.db.id
-route_table_id = aws_route_table.db.id
+  count          = length(aws_subnet.db)
+  subnet_id      = aws_subnet.db[count.index].id
+  route_table_id = aws_route_table.db[count.index].id
 }
 
-#----- AWS VPC Flow Logs ------
-
+# ---------- VPC Flow Logs ----------
 resource "aws_flow_log" "vpc_flow_log" {
-vpc_id = aws_vpc.main.id
-log_destination = aws_s3_bucket.flow_logs.arn
-traffic_type = "ALL"
-log_destination_type = "aws_s3_bucket"
+  vpc_id               = aws_vpc.main.id
+  log_destination      = aws_s3_bucket.flow_logs.arn
+  traffic_type         = "ALL"
+  log_destination_type = "s3"
 
-tags = {
-Name = "main-vpc-flow-log"
-}
+  tags = {
+    Name = "main-vpc-flow-log"
+  }
 }
