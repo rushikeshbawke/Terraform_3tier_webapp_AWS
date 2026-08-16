@@ -62,6 +62,7 @@ bucket = aws_s3_bucket.alb_access_logs.bucket
 prefix = "internal-alb-access-logs"   # tells AWS to store ALB access logs in the S3 bucket under the path starting with internal-alb-access-logs/
 enabled = true               # Tells AWS to turn on server access logging for the bucket.
 }
+}
 
 resource "aws_lb_target_group" "internal_alb_tg" {
 name = "internal-alb-tg"

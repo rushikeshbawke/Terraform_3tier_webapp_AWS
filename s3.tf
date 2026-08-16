@@ -57,7 +57,7 @@ resource "aws_s3_bucket_policy" "flow_logs" {
             "s3:x-amz-acl" = "bucket-owner-full-control"
           }
         }
-      }
+      },
       {
         sid = "AWSLogDeliveryAclCheck"
         Effect = "Allow"

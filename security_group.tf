@@ -27,6 +27,7 @@ protocol = "tcp"
 description = "Allow HTTPS access"
 cidr_blocks = ["0.0.0.0/0"]
 }
+}
 
 # ------ Web tier security group - allow traffic from ALB security group only ------
 
@@ -50,6 +51,7 @@ to_port = 22
 protocol = "tcp"
 description = "Allow SSH from Admin IP"
 cidr_blocks = [var.my_ip]
+}
 }
 
 egress {

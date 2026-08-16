@@ -87,9 +87,6 @@ resource "aws_autoscaling_group" "web" {
     version = "$Latest"
   }
 
-  health_check_type         = "EC2"
-  health_check_grace_period = 300
-
   tag {
     key                 = "Name"
     value               = "web-instance"

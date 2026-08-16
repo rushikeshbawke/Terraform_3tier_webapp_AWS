@@ -7,20 +7,13 @@ variable "aws_region" {
 variable "ssh_key_name" {
   description = "Existing EC2 key pair name for SSH access (optional, leave empty to disable SSH)"
   type        = string
-  default     = aws_key_pair.shared-key.key_name
+  default     = "demo-keys"
 }
 
 variable "my_ip_cidr" {
   description = "Your IP in CIDR form, allowed for SSH access to instances (only used if ssh_key_name is set)"
   type        = string
   default     = "0.0.0.0/0"
-}
-
-
-variable "ssh_key_name" {
-  description = "The name of the SSH key pair to use for EC2 instances."
-  type        = string
-  default     = ""
 }
 
 # --------- VPC & subnets ------------

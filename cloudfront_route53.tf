@@ -16,12 +16,6 @@ locals {
   )
 }
 
-locals {
-  zone_id = var.domain_name == "" ? "" : (
-    var.create_route53_zone ? aws_route53_zone.main[0].zone_id : data.aws_route53_zone.existing[0].zone_id
-  )
-}
-
 # --------- Cloudfront distribution in front of external ALB ---------
 
 resource "aws_cloudfront_distribution" "main" {
@@ -83,7 +77,7 @@ default_root_object = ""
 
 resource "aws_acm_certificate" "main" {
   count             = var.domain_name != "" ? 1 : 0
-  provider          = aws
+  provider          = "aws"
   domain_name       = var.domain_name
   validation_method = "DNS"
 
