@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "ssh_key_name" {
   description = "Existing EC2 key pair name for SSH access (optional, leave empty to disable SSH)"
   type        = string
-  default     = ""
+  default     = aws_key_pair.shared-key.key_name
 }
 
 variable "my_ip_cidr" {
@@ -21,6 +21,38 @@ variable "ssh_key_name" {
   description = "The name of the SSH key pair to use for EC2 instances."
   type        = string
   default     = ""
+}
+
+# --------- VPC & subnets ------------
+
+variable "vpc_cidr" {
+description = "CIDR of main vpc"
+type = string
+default = "12.5.0.0/16"
+}
+
+variable "availability_zone" {
+description = "availability zone"
+type = string
+default = "ap-south-1a"
+}
+
+variable "public_subnet_cidr" {
+description = "CIDR for web tier subnet"
+type = string
+default = "12.5.1.0/24"
+}
+
+variable "private_subnet_cidr" {
+description = "CIDR for app tier subnet"
+type = string
+default = "12.5.2.0/24"
+}
+
+variable "db_subnet_cidr" {
+description = "CIDR for db tier subnet"
+type = string
+default = "12.5.3.0/24"
 }
 
 # ---------  Notifictions -------------
@@ -135,12 +167,6 @@ variable "db_name" {
 variable "db_username" {
   type    = string
   default = "dbadmin"
-}
-
-variable "db_multi_az" {
-  description = "Deploy RDS Multi-AZ (primary in AZ-1a, standby/backup in AZ-1b — matches DATABASE-TIER-1/2 in the diagram)"
-  type        = bool
-  default     = true
 }
 
 # ---- Route53 / CloudFront ----

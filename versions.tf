@@ -19,11 +19,3 @@ terraform {
     dynamodb_table = "terraform-locks"
     encrypt        = true
   }
-
-  provider "aws" {
-    region = "ap-south-1"
-    tags = {
-        ManagedBy = "Terraform"
-  }
-  }
-}
