@@ -4,10 +4,16 @@ variable "aws_region" {
   default     = "ap-south-1"
 }
 
-variable "ssh_key_name" {
-  description = "Existing EC2 key pair name for SSH access (optional, leave empty to disable SSH)"
+variable "project_name" {
+  description = "Name whcih is used for naming resources."
   type        = string
-  default     = "demo-keys"
+  default     = "demo-three-tier"
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "prod"
 }
 
 variable "my_ip_cidr" {
@@ -24,36 +30,28 @@ variable "vpc_cidr" {
   default     = "12.5.0.0/16"
 }
 
-variable "availability_zone" {
+variable "availability_zones" {
   description = "availability zone"
-  type        = string
-  default     = "ap-south-1a"
+  type        = list(string)
+  default     = ["ap-south-1a", "ap-south-1b"]
 }
 
-variable "public_subnet_cidr" {
+variable "public_subnet_cidrs" {
   description = "CIDR for web tier subnet"
-  type        = string
-  default     = "12.5.1.0/24"
+  type        = list(string)
+  default     = ["12.5.0.0/24", "12.5.10.0/24"]
 }
 
-variable "private_subnet_cidr" {
+variable "app_subnet_cidrs" {
   description = "CIDR for app tier subnet"
-  type        = string
-  default     = "12.5.2.0/24"
+  type        = list(string)
+  default     = ["12.5.1.0/24", "12.5.11.0/24"]
 }
 
-variable "db_subnet_cidr" {
+variable "db_subnet_cidrs" {
   description = "CIDR for db tier subnet"
   type        = list(string)
-  default     = ["12.5.3.0/24","12.5.13.0/24"]
-}
-
-# ---------  Notifictions -------------
-
-variable "user_email" {
-  description = "The email address to receive notifications and alerts."
-  type        = string
-  default     = "rushikeshbawke0000@gmail.com"
+  default     = ["12.5.2.0/24", "12.5.12.0/24"]
 }
 
 # --------- web tier variables ---------
@@ -64,7 +62,7 @@ variable "web_instance_type" {
   default     = "t3.micro"
 }
 
-variable "web_ami" {
+variable "web_ami_id" {
   description = "The pre-configured image used by orgnaization"
   type        = string
   default     = null
@@ -98,10 +96,10 @@ variable "web_port" {
 variable "app_instance_type" {
   description = "The EC2 instance type for the app tier."
   type        = string
-  default     = "t3.micro"
+  default     = "t3.small"
 }
 
-variable "app_ami" {
+variable "app_ami_id" {
   description = "The pre-configured image used by orgnaization"
   type        = string
   default     = null
@@ -110,13 +108,13 @@ variable "app_ami" {
 variable "app_asg_min_size" {
   description = "The minimum number of EC2 instances in the app tier."
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "app_asg_max_size" {
   description = "The maximum number of EC2 instances in the app tier."
   type        = number
-  default     = 3
+  default     = 4
 }
 
 variable "app_asg_desired_capacity" {
@@ -144,12 +142,12 @@ variable "db_engine_version" {
 
 variable "db_instance_class" {
   type    = string
-  default = "db.t3.medium"
+  default = "db.t3.micro"
 }
 
 variable "db_allocated_storage" {
   type    = number
-  default = 100
+  default = 20
 }
 
 variable "db_name" {
@@ -162,10 +160,17 @@ variable "db_username" {
   default = "dbadmin"
 }
 
-variable "db_availability_zones" {
-  description = "AZs to deploy into (must match subnet CIDR list length)"
-  type        = list(string)
-  default     = ["ap-south-1a", "ap-south-1b"]
+variable "db_multi_az" {
+  description = "Deploy RDS Multi-AZ (primary in AZ-1a, standby/backup in AZ-1b — matches DATABASE-TIER-1/2 in the diagram)"
+  type        = bool
+  default     = true
+}
+
+# ---------  Notifictions -------------
+variable "user_email" {
+  description = "The email address to receive notifications and alerts."
+  type        = string
+  default     = "rushikeshbawke0000@gmail.com"
 }
 
 # ---- Route53 / CloudFront ----
@@ -179,5 +184,11 @@ variable "create_route53_zone" {
   description = "Whether Terraform should create the Route53 hosted zone (set false if it already exists)"
   type        = bool
   default     = false
+}
+
+variable "ssh_key_name" {
+  description = "Existing EC2 key pair name for SSH access (optional, leave empty to disable SSH)"
+  type        = string
+  default     = ""
 }
 
