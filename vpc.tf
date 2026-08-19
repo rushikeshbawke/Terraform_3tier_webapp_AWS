@@ -5,7 +5,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "main-vpc"
+    Name = "${var.project_name}-vpc"
   }
 }
 
@@ -14,38 +14,41 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "main-igw"
+    Name = "${var.project_name}-igw"
   }
 }
 
 # ---------- Public Subnet -> Web-tier ----------
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_cidr
+  count                   = length(var.public_subnet_cidrs)
+  cidr_block              = var.public_subnet_cidrs[count.index]
+  availability_zone       = var.availability_zones[count.index]
+  
   map_public_ip_on_launch = true
-  availability_zone       = var.availability_zone
 
   tags = {
-    Name = "main-public-subnet"
+    Name = "${var.project_name}-public-web-${var.availability_zones[count.index]}"
   }
 }
 
 # ---------- Private Subnet -> App-tier ----------
-resource "aws_subnet" "private" {
+resource "aws_subnet" "app" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet_cidr
-  availability_zone = var.availability_zone
+  count = length(var.app_subnet_cidrs)
+  cidr_block        = var.app_subnet_cidrs[count.index]
+  availability_zone = var.availability_zones[count.index]
 
   tags = {
-    Name = "main-private-subnet"
+    Name = "${var.project-name}-private-app-${var.availability_zones[count.index]}"
   }
 }
 
 # ---------- Private Subnet -> DB-tier ----------
 resource "aws_subnet" "db" {
-  count             = length(var.db_subnet_cidr)
+  count             = length(var.db_subnet_cidrs)
   vpc_id            = aws_vpc.main.id
-  cidr_block        = var.db_subnet_cidr[count.index]
+  cidr_block        = var.db_subnet_cidrs[count.index]
   availability_zone = var.db_availability_zones[count.index]
 
   tags = {
