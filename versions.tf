@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.0.0"
+  required_version = ">= 1.5.0"
 
   required_providers {
     aws = {
@@ -14,7 +14,7 @@ terraform {
 
   backend "s3" {
     bucket       = "terraform-state-3tier-webapp-bucket"
-    key          = "terraform.tfstate"
+    key          = "three-tier-arch/terraform.tfstate"
     region       = "ap-south-1"
     use_lockfile = true
     encrypt      = true
@@ -23,8 +23,10 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+
    default_tags {
     tags = {
+      Project     = var.projec_name
       Environment = "production"
       ManagedBy   = "terraform"
     }

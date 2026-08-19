@@ -10,7 +10,7 @@ resource "aws_vpc" "main" {
 }
 
 # ---------- Internet Gateway ----------
-resource "aws_internet_gateway" "main" {
+resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
@@ -53,25 +53,31 @@ resource "aws_subnet" "db" {
 
   tags = {
     Name = "main-db-subnet-${var.db_availability_zones[count.index]}"
+    Tier = "database"
   }
 }
 
 # ---------- NAT Gateway ----------
 resource "aws_eip" "nat" {
   domain = "vpc"
+  count  = length(var.public_subnet_cidrs)
 
   tags = {
-    Name = "main-nat-eip"
+    Name = "${var.project_name}-nat-eip-${var.availability_zones[count.index]}"
   }
 }
 
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
+resource "aws_nat_gateway" "nat" {
+  count = length(var.public_subnet_cidrs)
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
 
   tags = {
-    Name = "main-nat-gateway"
+    Name = "${var.project_name}-nat-gateway-${availability_zones[count.index]}"
   }
+
+  depends_on = [aws_internet_gateway.igw]
+
 }
 
 # ---------- Route Table: Public ----------
@@ -80,45 +86,48 @@ resource "aws_route_table" "public" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.igw.id
   }
 
   tags = {
-    Name = "main-public-route-table"
+    Name = "${var.project_name}-public-route-table"
   }
 }
 
 resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.public.id
+  count          = length(aws_subnet.public)
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public[count.index].id
 }
 
 # ---------- Route Table: Private ----------
-resource "aws_route_table" "private" {
+resource "aws_route_table" "app" {
   vpc_id = aws_vpc.main.id
+  count  = length(var.public_subnet_cidrs)
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
+    nat_gateway_id = aws_nat_gateway.nat[count.index].id
   }
 
   tags = {
-    Name = "main-private-route-table"
+    Name = "${var.project_name}-private-route-table"
   }
 }
 
-resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.private.id
-  route_table_id = aws_route_table.private.id
+resource "aws_route_table_association" "app" {
+  count          = length(aws_subnet.app)
+  subnet_id      = aws_subnet.app[count.index].id
+  route_table_id = aws_route_table.app[count.index].id
 }
 
 # ---------- Route Table: DB ----------
 resource "aws_route_table" "db" {
   vpc_id = aws_vpc.main.id
-  count  = length(var.db_subnet_cidr)
+  count  = length(var.db_subnet_cidrs)
 
   tags = {
-    Name = "main-db-route-table-${var.db_availability_zones[count.index]}"
+    Name = "${project_name}-db-route-table-${var.db_availability_zones[count.index]}"
   }
 }
 
@@ -136,6 +145,6 @@ resource "aws_flow_log" "vpc_flow_log" {
   log_destination_type = "s3"
 
   tags = {
-    Name = "main-vpc-flow-log"
+    Name = "${var.project_name}-vpc-flow-log"
   }
 }
