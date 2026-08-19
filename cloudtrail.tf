@@ -1,5 +1,5 @@
 resource "aws_cloudtrail" "trail" {
-  name                          = "app-cloudtrail"
+  name                          = "${var.project_name}-trail"
   s3_bucket_name                = aws_s3_bucket.cloudtrail_logs.bucket
   include_global_service_events = true
   is_multi_region_trail         = true
@@ -18,7 +18,6 @@ resource "aws_cloudtrail" "trail" {
   depends_on = [aws_s3_bucket_policy.cloudtrail_logs]
 
   tags = {
-    Name = "app-cloudtrail"
-    Tier = "app"
+    Name = "${var.project_name}-trail"
   }
 }

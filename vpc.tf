@@ -20,11 +20,11 @@ resource "aws_internet_gateway" "igw" {
 
 # ---------- Public Subnet -> Web-tier ----------
 resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  count                   = length(var.public_subnet_cidrs)
-  cidr_block              = var.public_subnet_cidrs[count.index]
-  availability_zone       = var.availability_zones[count.index]
-  
+  vpc_id            = aws_vpc.main.id
+  count             = length(var.public_subnet_cidrs)
+  cidr_block        = var.public_subnet_cidrs[count.index]
+  availability_zone = var.availability_zones[count.index]
+
   map_public_ip_on_launch = true
 
   tags = {
@@ -35,12 +35,12 @@ resource "aws_subnet" "public" {
 # ---------- Private Subnet -> App-tier ----------
 resource "aws_subnet" "app" {
   vpc_id            = aws_vpc.main.id
-  count = length(var.app_subnet_cidrs)
+  count             = length(var.app_subnet_cidrs)
   cidr_block        = var.app_subnet_cidrs[count.index]
   availability_zone = var.availability_zones[count.index]
 
   tags = {
-    Name = "${var.project-name}-private-app-${var.availability_zones[count.index]}"
+    Name = "${var.project_name}-private-app-${var.availability_zones[count.index]}"
   }
 }
 
@@ -49,10 +49,10 @@ resource "aws_subnet" "db" {
   count             = length(var.db_subnet_cidrs)
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.db_subnet_cidrs[count.index]
-  availability_zone = var.db_availability_zones[count.index]
+  availability_zone = var.availability_zones[count.index]
 
   tags = {
-    Name = "main-db-subnet-${var.db_availability_zones[count.index]}"
+    Name = "main-db-subnet-${var.availability_zones[count.index]}"
     Tier = "database"
   }
 }
@@ -68,12 +68,12 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "nat" {
-  count = length(var.public_subnet_cidrs)
+  count         = length(var.public_subnet_cidrs)
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
 
   tags = {
-    Name = "${var.project_name}-nat-gateway-${availability_zones[count.index]}"
+    Name = "${var.project_name}-nat-gateway-${var.availability_zones[count.index]}"
   }
 
   depends_on = [aws_internet_gateway.igw]
@@ -97,7 +97,7 @@ resource "aws_route_table" "public" {
 resource "aws_route_table_association" "public" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public[count.index].id
+  route_table_id = aws_route_table.public.id
 }
 
 # ---------- Route Table: Private ----------
@@ -127,7 +127,7 @@ resource "aws_route_table" "db" {
   count  = length(var.db_subnet_cidrs)
 
   tags = {
-    Name = "${project_name}-db-route-table-${var.db_availability_zones[count.index]}"
+    Name = "${var.project_name}-db-route-table-${var.availability_zones[count.index]}"
   }
 }
 

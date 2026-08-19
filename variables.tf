@@ -71,13 +71,13 @@ variable "web_ami_id" {
 variable "web_asg_min_size" {
   description = "The minimum number of EC2 instances in the web tier."
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "web_asg_max_size" {
   description = "The maximum number of EC2 instances in the web tier."
   type        = number
-  default     = 3
+  default     = 4
 }
 
 variable "web_asg_desired_capacity" {

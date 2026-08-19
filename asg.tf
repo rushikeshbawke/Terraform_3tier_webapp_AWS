@@ -14,19 +14,19 @@ data "aws_ami" "latest_linux" {
 }
 
 locals {
-  web_ami = coalesce(var.web_ami, data.aws_ami.latest_linux.id) # returns the first non null, non empty value from the list of arguments.
-  app_ami = coalesce(var.app_ami, data.aws_ami.latest_linux.id)
+  web_ami = coalesce(var.web_ami_id, data.aws_ami.latest_linux.id) # returns the first non null, non empty value from the list of arguments.
+  app_ami = coalesce(var.app_ami_id, data.aws_ami.latest_linux.id)
 }
 
 # ------- web tier - Launch template and ASG -------
 
 resource "aws_launch_template" "web" {
-  name_prefix   = "web-launch-template-"
+  name_prefix   = "${var.project_name}-web-launch-template-"
   image_id      = local.web_ami
   instance_type = var.web_instance_type
   key_name      = var.ssh_key_name != "" ? var.ssh_key_name : null
 
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  vpc_security_group_ids = [aws_security_group.web.id]
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ec2_profile.name
@@ -52,7 +52,7 @@ resource "aws_launch_template" "web" {
               amazon-linux-extras install -y nginx1
               systemctl enable nginx
               systemctl start nginx
-              echo "<h1>Welcome to the Web Server</h1>" > /usr/share/nginx/html/index.html
+              echo "<h1>${var.project_name} - Web Tier - $(hostname -f)</h1>" > /usr/share/nginx/html/index.html
             # Reverse-proxy example: forward /api to internal ALB (app tier)
             # Configure httpd/nginx as needed to proxy to: ${aws_lb.internal.dns_name}:${var.app_port}
   EOF
@@ -62,24 +62,24 @@ resource "aws_launch_template" "web" {
     resource_type = "instance"
 
     tags = {
-      Name = "web-instance"
+      Name = "${var.project_name}-web-instance"
       Tier = "web"
     }
   }
 
   tags = {
-    Name = "web-launch-template"
+    Name = "${var.project_name}-web-launch-template"
     Tier = "web"
   }
 }
 
 resource "aws_autoscaling_group" "web" {
-  name                      = "web-asg"
+  name                      = "${var.project_name}-web-asg"
   max_size                  = var.web_asg_max_size
   min_size                  = var.web_asg_min_size
   desired_capacity          = var.web_asg_desired_capacity
-  vpc_zone_identifier       = [aws_subnet.public.id]
-  target_group_arns         = [aws_lb_target_group.external_alb_tg.arn]
+  vpc_zone_identifier       = aws_subnet.public[*].id
+  target_group_arns         = [aws_lb_target_group.web.arn]
   health_check_type         = "ELB"
   health_check_grace_period = 300 # ASG setting that controls how long the ASG waits before starting to evaluate the health of a newly launched instance.
   launch_template {
@@ -95,13 +95,13 @@ resource "aws_autoscaling_group" "web" {
 
   tag {
     key                 = "Tier"
-    value               = "web"
+    value               = "${var.project_name}-web"
     propagate_at_launch = true
   }
 }
 
 resource "aws_autoscaling_policy" "web_scale_out" {
-  name                   = "web-scale_out"
+  name                   = "${var.project_name}-web-scale_out"
   autoscaling_group_name = aws_autoscaling_group.web.name
   policy_type            = "TargetTrackingScaling"
   target_tracking_configuration {
@@ -112,27 +112,15 @@ resource "aws_autoscaling_policy" "web_scale_out" {
   }
 }
 
-resource "aws_autoscaling_policy" "web_scale_in" {
-  name                   = "web-scale_in"
-  autoscaling_group_name = aws_autoscaling_group.web.name
-  policy_type            = "TargetTrackingScaling"
-  target_tracking_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ASGAverageCPUUtilization"
-    }
-    target_value = 30.0
-  }
-}
-
 # ------- app tier - Launch template and ASG -------
 
 resource "aws_launch_template" "app" {
-  name_prefix   = "app-launch-template-"
+  name_prefix   = "${var.project_name}-app-launch-template-"
   image_id      = local.app_ami
   instance_type = var.app_instance_type
   key_name      = var.ssh_key_name != "" ? var.ssh_key_name : null
 
-  vpc_security_group_ids = [aws_security_group.app_sg.id]
+  vpc_security_group_ids = [aws_security_group.app.id]
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ec2_profile.name
@@ -169,24 +157,24 @@ resource "aws_launch_template" "app" {
     resource_type = "instance"
 
     tags = {
-      Name = "app-instance"
+      Name = "${var.project_name}-app-instance"
       Tier = "app"
     }
   }
 
   tags = {
-    Name = "app-launch-template"
+    Name = "${var.project_name}-app-launch-template"
     Tier = "app"
   }
 }
 
 resource "aws_autoscaling_group" "app" {
-  name                      = "app-asg"
+  name                      = "${var.project_name}-app-asg"
   max_size                  = var.app_asg_max_size
   min_size                  = var.app_asg_min_size
   desired_capacity          = var.app_asg_desired_capacity
-  vpc_zone_identifier       = [aws_subnet.private.id]
-  target_group_arns         = [aws_lb_target_group.internal_alb_tg.arn]
+  vpc_zone_identifier       = aws_subnet.app[*].id
+  target_group_arns         = [aws_lb_target_group.app.arn]
   health_check_type         = "ELB"
   health_check_grace_period = 300
   launch_template {
@@ -208,7 +196,7 @@ resource "aws_autoscaling_group" "app" {
 }
 
 resource "aws_autoscaling_policy" "app_scale_out" {
-  name                   = "app-scale_out"
+  name                   = "${var.project_name}-app-scale_out"
   autoscaling_group_name = aws_autoscaling_group.app.name
   policy_type            = "TargetTrackingScaling"
   target_tracking_configuration {
@@ -216,17 +204,5 @@ resource "aws_autoscaling_policy" "app_scale_out" {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
     target_value = 60.0
-  }
-}
-
-resource "aws_autoscaling_policy" "app_scale_in" {
-  name                   = "app-scale_in"
-  autoscaling_group_name = aws_autoscaling_group.app.name
-  policy_type            = "TargetTrackingScaling"
-  target_tracking_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ASGAverageCPUUtilization"
-    }
-    target_value = 30.0
   }
 }

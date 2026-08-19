@@ -69,7 +69,7 @@ resource "aws_cloudfront_distribution" "main" {
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
-  tags = { Name = "webapp-cloudfront" }
+  tags = { Name = "${var.project_name}-cloudfront" }
 }
 
 

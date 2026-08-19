@@ -109,8 +109,8 @@ resource "aws_s3_bucket_policy" "alb_logs" {
 # -------- s3 bucket for application data (reference by app tier iam role) ---------
 
 resource "aws_s3_bucket" "app_data" {
-  bucket = "${var.project_name}-app-data-${random_id.suffix.hex}"
-  force_destroy = true   # without this we cannt able to delete this bucket because object are present inside it.
+  bucket        = "${var.project_name}-app-data-${random_id.suffix.hex}"
+  force_destroy = true # without this we cannt able to delete this bucket because object are present inside it.
 
   tags = {
     Name = "${var.project_name}-app-data-bucket"
@@ -147,8 +147,8 @@ resource "aws_s3_bucket_versioning" "app_data" {
 # -------- s3 bucket for cloudtrail logs ---------
 
 resource "aws_s3_bucket" "cloudtrail_logs" {
-  bucket = "${var.project_name}-cloudtrail-logs-${random_id.suffix.hex}"
-  force_destroy = true   # without this we cannt able to delete this bucket because object are present inside it.
+  bucket        = "${var.project_name}-cloudtrail-logs-${random_id.suffix.hex}"
+  force_destroy = true # without this we cannt able to delete this bucket because object are present inside it.
 
   tags = {
     Name = "${var.project_name}-cloudtrail-logs-bucket"

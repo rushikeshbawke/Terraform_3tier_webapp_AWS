@@ -19,7 +19,7 @@ resource "aws_cloudwatch_metric_alarm" "web_high_cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "app_high_cpu" {
-  alarm_name          = "app-high-cpu"
+  alarm_name          = "${var.project_name}-app-high-cpu"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
@@ -37,7 +37,7 @@ resource "aws_cloudwatch_metric_alarm" "app_high_cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "external_alb_5xx" {
-  alarm_name          = "external-alb-5xx"
+  alarm_name          = "${var.project_name}-external-alb-5xx"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
   metric_name         = "HTTPCode_Target_5XX_Count"
@@ -55,7 +55,7 @@ resource "aws_cloudwatch_metric_alarm" "external_alb_5xx" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
-  alarm_name          = "db-high-cpu"
+  alarm_name          = "${var.project_name}-db-high-cpu"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
@@ -72,7 +72,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_low_storage" {
-  alarm_name          = "db-low-storage"
+  alarm_name          = "${var.project_name}-db-low-storage"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = 1
   metric_name         = "FreeStorageSpace"
@@ -89,11 +89,11 @@ resource "aws_cloudwatch_metric_alarm" "db_low_storage" {
 }
 
 resource "aws_cloudwatch_log_group" "app" {
-  name              = "/3-tier-app/app"
-  retention_in_days = 30
+  name              = "/${var.project_name}/app"
+  retention_in_days = 3
 }
 
 resource "aws_cloudwatch_log_group" "web" {
-  name              = "/3-tier-app/web"
-  retention_in_days = 30
+  name              = "/${var.project_name}/web"
+  retention_in_days = 3
 }

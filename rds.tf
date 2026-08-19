@@ -45,24 +45,24 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
 
-  availability_zone = var.db_availability_zones[0]
+  availability_zone = var.availability_zones[0]
 
   backup_retention_period = 1
   backup_window           = "03:00-04:00"
   maintenance_window      = "mon:04:30-mon:05:30"
 
-/*
+  /*
   deletion_protection       = true
   skip_final_snapshot       = false
   final_snapshot_identifier = "db-final-snapshot"
 */
 
-skip_final_snapshot = true     # [Certain] without this, destroy WILL fail
-                               # Terraform tries to take a final snapshot and
-                               # requires final_snapshot_identifier if this is false
+  skip_final_snapshot = true # [Certain] without this, destroy WILL fail
+  # Terraform tries to take a final snapshot and
+  # requires final_snapshot_identifier if this is false
 
-deletion_protection = false    # [Certain] if true, destroy errors out immediately
-                               # with "cannot destroy, protection enabled"
+  deletion_protection = false # [Certain] if true, destroy errors out immediately
+  # with "cannot destroy, protection enabled"
 
 
   enabled_cloudwatch_logs_exports = var.db_engine == "postgres" ? ["postgresql"] : ["error", "general", "slowquery"]
