@@ -6,12 +6,34 @@ This project demonstrates core DevOps principles including modular infrastructur
 
 ---
 
-## Architecture Overview
+## Deep-Dive Architecture & Traffic Flow
 
-- **Presentation Layer:** Amazon CloudFront distribution paired with AWS Route53 for Global Content Delivery (CDN) and DNS management.
-- **Application / Compute Layer:** Application Load Balancer (ALB) routing incoming web traffic across an Auto Scaling Group (ASG) of EC2 instances spanning multiple Availability Zones.
-- **Data Layer:** Multi-AZ Amazon RDS (Relational Database Service) for structured storage and Amazon S3 for static object storage.
-- **Observability & Security:** Comprehensive logging and auditing via AWS CloudWatch, CloudTrail, IAM fine-grained policies, and automated alerting via SNS.
+The architecture follows AWS best practices for a multi-tier, highly available, and secure production environment.
+
+### 1. Edge & Content Delivery Tier
+* **Amazon Route 53:** Serves as the primary DNS service, routing global user requests with low latency.
+* **Amazon CloudFront:** Acts as the global Content Delivery Network (CDN), caching static assets at edge locations to minimize latency and reduce origin load.
+
+### 2. Presentation / Web Tier (Public Subnets)
+* **Application Load Balancer (ALB):** Positioned across multiple Availability Zones in public subnets to distribute incoming HTTP/HTTPS traffic dynamically. Conducts continuous health checks to direct traffic only to healthy compute instances.
+* **Auto Scaling Group (ASG) - Web Servers:** Dynamically scales EC2 web instances across Availability Zones (AZ-1a, AZ-1b) based on demand metrics, ensuring fault tolerance and high availability.
+* **NAT Gateways:** Provisioned in public subnets to allow instances in private subnets outbound internet access (e.g., for software updates/patches) without exposing them to inbound internet traffic.
+
+### 3. Application Tier (Private Subnets)
+* **Internal ALB & ASG - App Servers:** Receives traffic exclusively from the web tier via strict Security Group rules. Houses core business logic isolated from direct public internet exposure.
+
+### 4. Data Tier (Isolated Subnets)
+* **Amazon RDS (Multi-AZ):** Provisions a Primary database in one AZ and maintains a synchronous Standby/Backup replica in a second AZ for automatic failover and high reliability.
+* **Amazon S3:** Dedicated storage buckets for static object hosting, application state backups, and VPC Flow Logs.
+
+### 5. Security & Observability Layer
+* **IAM Roles & Policies:** Enforces the principle of least privilege for EC2 instance profiles and AWS service integrations.
+* **AWS CloudTrail & VPC Flow Logs:** Captures continuous API audit trails and network traffic logs stored securely in S3.
+* **Amazon CloudWatch & SNS:** Real-time infrastructure metric collection and automated alarm notifications dispatched to administrators via SNS topics.
+
+---
+
+<img width="1580" height="812" alt="Architecture-diagram" src="https://github.com/user-attachments/assets/6afd66ab-6384-4aa6-8712-2d3bc11e7522" />
 
 ---
 
