@@ -52,10 +52,28 @@ Terraform_3tier_webapp_AWS/
 ├── variables.tf          # Input variable definitions and defaults
 ├── outputs.tf            # Operational outputs (Endpoints, IDs, DNS names)
 └── versions.tf           # Required Terraform and Provider versions
-Key Skills & AWS Services DemonstratedCompetency / FeatureRelevant Terraform FileNetwork Isolation & Multi-AZ VPCvpc.tfStateful Security & Traffic Controlsecurity_group.tfHigh Availability & Load Balancingalb.tf & asg.tfDatabase Provisioning & Resiliencerds.tfCDN & Custom Domain Routingcloudfront_route53.tfIdentity & Access Management (IAM)iam.tfEnterprise Auditability & Loggingcloudwatch.tf, cloudtrail.tf, sns.tfDeployment Guide1. Prerequisites SetupClone the repository and initialize the working directory:Bashgit clone [https://github.com/rushikeshbawke/Terraform_3tier_webapp_AWS.git](https://github.com/rushikeshbawke/Terraform_3tier_webapp_AWS.git)
-cd Terraform_3tier_webapp_AWS
-terraform init
-2. Plan InfrastructureReview the proposed execution plan to verify resource creation:Bashterraform plan
-3. DeployApply the configuration to provision the 3-tier environment on AWS:Bashterraform apply -auto-approve
-4. TeardownTo destroy all provisioned infrastructure and avoid unnecessary cloud costs:Bashterraform destroy -auto-approve
-Key Operational OutputsUpon successful deployment, Terraform exports key operational endpoints:alb_dns_name: Public URL of the Application Load Balancercloudfront_domain_name: CDN Endpoint for fast asset deliveryrds_endpoint: Private Database Connection Endpoint
+
+
+## Key Skills & AWS Services Demonstrated
+
+| Skill & AWS Service | Capability & Architectural Responsibility | Relevant Terraform File |
+| :--- | :--- | :--- |
+| **AWS VPC & Networking** | Multi-AZ subnet isolation, NAT Gateways, Internet Gateways, and Route Tables for secure network boundaries. | `vpc.tf` |
+| **AWS Security Groups** | Stateful firewall rules enforcing least-privilege access across Load Balancers, EC2, RDS, and S3. | `security_group.tf` |
+| **AWS ALB & EC2 ASG** | High availability, automated health checks, dynamic auto-scaling, and zero-downtime traffic distribution. | `alb.tf` & `asg.tf` |
+| **Amazon RDS (Data Tier)** | Relational database provisioning with Multi-AZ failover and encrypted subnet management. | `rds.tf` |
+| **AWS CloudFront & Route 53** | Low-latency global content delivery (CDN), custom domain routing, and edge caching. | `cloudfront_route53.tf` |
+| **AWS IAM & Security** | Fine-grained identity access management, role delegation, instance profiles, and policy enforcement. | `iam.tf` |
+| **AWS Observability** | Centralized metric logging (CloudWatch), governance auditing (CloudTrail), and real-time alert dispatching (SNS). | `cloudwatch.tf`, `cloudtrail.tf`, `sns.tf` |
+
+---
+
+## Key Operational Outputs
+
+Upon executing `terraform apply`, the configuration exports the following operational endpoints and resource identifiers:
+
+* **`alb_dns_name`**: Public entry point managed by the Application Load Balancer for incoming HTTP/HTTPS web traffic.
+* **`cloudfront_domain_name`**: Low-latency CDN edge endpoint serving static web assets and distribution files.
+* **`rds_endpoint`**: Private network connection string for database queries originating from the compute tier.
+* **`s3_bucket_name`**: Globally unique storage bucket identifier for static website assets and backend log state.
+* **`sns_topic_arn`**: Amazon Resource Name (ARN) configured for CloudWatch metrics and real-time operational notifications.
