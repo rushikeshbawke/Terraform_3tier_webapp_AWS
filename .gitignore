@@ -5,6 +5,7 @@
 *.tfstate.*
 *.tfvars
 tfplan
+tfpland
 tf-debug.log
 crash.log
 crash.*.log

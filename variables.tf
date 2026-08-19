@@ -27,7 +27,7 @@ variable "my_ip_cidr" {
 variable "vpc_cidr" {
   description = "CIDR of main vpc"
   type        = string
-  default     = "12.5.0.0/16"
+  default     = "172.16.0.0/16"
 }
 
 variable "availability_zones" {
@@ -39,19 +39,19 @@ variable "availability_zones" {
 variable "public_subnet_cidrs" {
   description = "CIDR for web tier subnet"
   type        = list(string)
-  default     = ["12.5.0.0/24", "12.5.10.0/24"]
+  default     = ["172.16.0.0/24", "172.16.10.0/24"]
 }
 
 variable "app_subnet_cidrs" {
   description = "CIDR for app tier subnet"
   type        = list(string)
-  default     = ["12.5.1.0/24", "12.5.11.0/24"]
+  default     = ["172.16.1.0/24", "172.16.11.0/24"]
 }
 
 variable "db_subnet_cidrs" {
   description = "CIDR for db tier subnet"
   type        = list(string)
-  default     = ["12.5.2.0/24", "12.5.12.0/24"]
+  default     = ["172.16.2.0/24", "172.16.12.0/24"]
 }
 
 # --------- web tier variables ---------
