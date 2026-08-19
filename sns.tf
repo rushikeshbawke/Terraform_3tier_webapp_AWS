@@ -1,10 +1,10 @@
 # -------- SNS Topic => CloudWatch Alarm - User (Email) --------
 
 resource "aws_sns_topic" "alerts" {
-  name = "user-alarm-topic"
+  name = "${var.project_name}-alerts"
 }
 
-resource "aws_sns_topic_subscription" "user_alarm_email" {
+resource "aws_sns_topic_subscription" "alerts_email" {
   topic_arn = aws_sns_topic.alerts.arn
   protocol  = "email"
   endpoint  = var.user_email
@@ -13,10 +13,10 @@ resource "aws_sns_topic_subscription" "user_alarm_email" {
 # --------- SNS Topic => General Notifications ( from Cloudfront/app events - user) --------
 
 resource "aws_sns_topic" "notifications" {
-  name = "notifications-topic"
+  name = "${var.project_name}-notifications"
 }
 
-resource "aws_sns_topic_subscription" "user_notifications_email" {
+resource "aws_sns_topic_subscription" "notifications_email" {
   topic_arn = aws_sns_topic.notifications.arn
   protocol  = "email"
   endpoint  = var.user_email

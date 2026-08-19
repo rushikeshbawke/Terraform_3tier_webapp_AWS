@@ -1,7 +1,7 @@
 #----- External ALB Security Group - internet facing(from port 80 and 443)------
 
-resource "aws_security_group" "alb_sg" {
-  name   = "alb-security-group"
+resource "aws_security_group" "alb_external" {
+  name   = "${var.project_name}-alb-external-sg"
   vpc_id = aws_vpc.main.id
 
   egress {
@@ -27,12 +27,17 @@ resource "aws_security_group" "alb_sg" {
     description = "Allow HTTPS access"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  
+  tags = {
+    Name = "${var.project_name}-alb-external-sg"
+  }
+
 }
 
 # ------ Web tier security group - allow traffic from ALB security group only ------
 
-resource "aws_security_group" "web_sg" {
-  name   = "web-security-group"
+resource "aws_security_group" "web" {
+  name   = "${var.project_name}-web-security-group"
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -40,7 +45,7 @@ resource "aws_security_group" "web_sg" {
     to_port         = var.web_port
     protocol        = "tcp"
     description     = "Allow HTTP access from external ALB"
-    security_groups = [aws_security_group.alb_sg.id]
+    security_groups = [aws_security_group.alb_external.id]
   }
 
   dynamic "ingress" {
@@ -50,7 +55,7 @@ resource "aws_security_group" "web_sg" {
       to_port     = 22
       protocol    = "tcp"
       description = "Allow SSH from Admin IP"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = [var.my_ip_cidr]
     }
   }
 
@@ -63,13 +68,13 @@ resource "aws_security_group" "web_sg" {
   }
 
   tags = {
-    Name = "web-security-group"
+    Name = "${var.project_name}-web-security-group"
   }
 }
 
 #------ Internal ALB Security Group - Only allow traffic from Web tier ------
 
-resource "aws_security_group" "internal_alb_sg" {
+resource "aws_security_group" "alb_internal" {
   name   = "internal-alb-security-group"
   vpc_id = aws_vpc.main.id
 
@@ -78,7 +83,7 @@ resource "aws_security_group" "internal_alb_sg" {
     to_port         = var.app_port
     protocol        = "tcp"
     description     = "Allow HTTP access from web tier"
-    security_groups = [aws_security_group.web_sg.id]
+    security_groups = [aws_security_group.web.id]
   }
 
   egress {
@@ -90,14 +95,14 @@ resource "aws_security_group" "internal_alb_sg" {
   }
 
   tags = {
-    Name = "internal-alb-security-group"
+    Name = "${var.project_name}-internal-alb-security-group"
   }
 }
 
 #------ App tier security group - allow traffic from internal ALB only ------
 
-resource "aws_security_group" "app_sg" {
-  name   = "app-security-group"
+resource "aws_security_group" "app" {
+  name   = "${var.project_name}-app-security-group"
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -105,7 +110,7 @@ resource "aws_security_group" "app_sg" {
     to_port         = var.app_port
     protocol        = "tcp"
     description     = "Allow HTTP access from internal ALB"
-    security_groups = [aws_security_group.internal_alb_sg.id]
+    security_groups = [aws_security_group.alb_internal.id]
   }
 
   dynamic "ingress" {
@@ -115,7 +120,7 @@ resource "aws_security_group" "app_sg" {
       to_port     = 22
       protocol    = "tcp"
       description = "Allow SSH from Admin IP"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = [var.my_ip_cidr]
     }
   }
 
@@ -135,7 +140,7 @@ resource "aws_security_group" "app_sg" {
 #------ Database tier security group - allow traffic from app tier only ------
 
 resource "aws_security_group" "db_sg" {
-  name   = "db-security-group"
+  name   = "${var.project_name}-db-security-group"
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -143,7 +148,7 @@ resource "aws_security_group" "db_sg" {
     to_port         = local.db_port
     protocol        = "tcp"
     description     = "Allow MySQL access from app tier"
-    security_groups = [aws_security_group.app_sg.id]
+    security_groups = [aws_security_group.app.id]
   }
 
   egress {
@@ -155,7 +160,7 @@ resource "aws_security_group" "db_sg" {
   }
 
   tags = {
-    Name = "db-security-group"
+    Name = "${var.project_name}-db-security-group"
   }
 }
 
