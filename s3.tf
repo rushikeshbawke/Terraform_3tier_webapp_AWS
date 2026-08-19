@@ -11,13 +11,13 @@ resource "random_id" "suffix" {
 # ------ random_id is Terraform's way of giving you a unique,
 # ------ reproducible random string/number to use in resource names or identifiers.
 
-# ------- S3 Bucket for Flow Logs ------
+# *********** S3 Bucket for Flow Logs ***************
 
 resource "aws_s3_bucket" "flow_logs" {
-  bucket = "flow-logs-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-${random_id.suffix.hex}"
+  bucket = "${var.project_name}-vpc-flow-logs-${random_id.suffix.hex}"
 
   tags = {
-    Name = "flow-logs-bucket"
+    Name = "${var.project_name}-vpc-flow-logs-bucket"
   }
 }
 
@@ -47,19 +47,19 @@ resource "aws_s3_bucket_policy" "flow_logs" {
     Version = "2012-10-17"
     Statement = [
       {
-        sid       = "AWSLogDeliveryWrite"
+        Sid       = "AWSLogDeliveryWrite"
         Effect    = "Allow"
         Principal = { Service = "delivery.logs.amazonaws.com" }
         Action    = "s3:PutObject"
         Resource  = "${aws_s3_bucket.flow_logs.arn}/*"
-        condition = {
+        Condition = {
           StringEquals = {
             "s3:x-amz-acl" = "bucket-owner-full-control"
           }
         }
       },
       {
-        sid       = "AWSLogDeliveryAclCheck"
+        Sid       = "AWSLogDeliveryAclCheck"
         Effect    = "Allow"
         Principal = { Service = "delivery.logs.amazonaws.com" }
         Action    = "s3:GetBucketAcl"
@@ -69,19 +69,19 @@ resource "aws_s3_bucket_policy" "flow_logs" {
   })
 }
 
-#--------- s3 bucket for alb access logs ---------
+#************** s3 bucket for alb access logs *************
 
 data "aws_elb_service_account" "main" {}
 
-resource "aws_s3_bucket" "alb_access_logs" {
-  bucket = "alb-access-logs-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-${random_id.suffix.hex}"
+resource "aws_s3_bucket" "alb_logs" {
+  bucket = "${var.project_name}-alb-logs-${random_id.suffix.hex}"
   tags = {
-    Name = "alb-access-logs-bucket"
+    Name = "${var.project_name}-alb-logs-bucket"
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "alb_access_logs" {
-  bucket = aws_s3_bucket.alb_access_logs.id
+resource "aws_s3_bucket_public_access_block" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -89,18 +89,18 @@ resource "aws_s3_bucket_public_access_block" "alb_access_logs" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_policy" "alb_access_logs" {
-  bucket = aws_s3_bucket.alb_access_logs.id
+resource "aws_s3_bucket_policy" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        sid       = "ELBAccessLogsWrites"
+        Sid       = "ELBAccessLogsWrites"
         Effect    = "Allow"
         Principal = { AWS = data.aws_elb_service_account.main.arn }
         Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.alb_access_logs.arn}/*"
+        Resource  = "${aws_s3_bucket.alb_logs.arn}/*"
       }
     ]
   })
@@ -109,10 +109,11 @@ resource "aws_s3_bucket_policy" "alb_access_logs" {
 # -------- s3 bucket for application data (reference by app tier iam role) ---------
 
 resource "aws_s3_bucket" "app_data" {
-  bucket = "app-data-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-${random_id.suffix.hex}"
+  bucket = "${var.project_name}-app-data-${random_id.suffix.hex}"
+  force_destroy = true   # without this we cannt able to delete this bucket because object are present inside it.
 
   tags = {
-    Name = "app-data-bucket"
+    Name = "${var.project_name}-app-data-bucket"
   }
 }
 
@@ -146,10 +147,11 @@ resource "aws_s3_bucket_versioning" "app_data" {
 # -------- s3 bucket for cloudtrail logs ---------
 
 resource "aws_s3_bucket" "cloudtrail_logs" {
-  bucket = "cloudtrail-logs-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-${random_id.suffix.hex}"
+  bucket = "${var.project_name}-cloudtrail-logs-${random_id.suffix.hex}"
+  force_destroy = true   # without this we cannt able to delete this bucket because object are present inside it.
 
   tags = {
-    Name = "cloudtrail-logs-bucket"
+    Name = "${var.project_name}-cloudtrail-logs-bucket"
   }
 }
 
@@ -169,19 +171,19 @@ resource "aws_s3_bucket_policy" "cloudtrail_logs" {
     Version = "2012-10-17"
     Statement = [
       {
-        sid       = "AWSCloudTrailAclCheck"
+        Sid       = "AWSCloudTrailAclCheck"
         Effect    = "Allow"
         Principal = { Service = "cloudtrail.amazonaws.com" }
         Action    = "s3:GetBucketAcl"
         Resource  = aws_s3_bucket.cloudtrail_logs.arn
       },
       {
-        sid       = "AWSCloudTrailWrite"
+        Sid       = "AWSCloudTrailWrite"
         Effect    = "Allow"
         Principal = { Service = "cloudtrail.amazonaws.com" }
         Action    = "s3:PutObject"
         Resource  = "${aws_s3_bucket.cloudtrail_logs.arn}/*"
-        condition = {
+        Condition = {
           StringEquals = {
             "s3:x-amz-acl" = "bucket-owner-full-control"
           }
