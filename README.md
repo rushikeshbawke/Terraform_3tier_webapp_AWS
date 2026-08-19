@@ -34,26 +34,6 @@ This project demonstrates core DevOps principles including modular infrastructur
 
 ---
 
-## Repository Structure
-
-```text
-Terraform_3tier_webapp_AWS/
-├── vpc.tf                # VPC, Public/Private Subnets, NAT Gateways, Route Tables
-├── security_group.tf     # Security Groups for ALB, EC2, RDS, and S3 access
-├── alb.tf                # Application Load Balancer, Listener Rules, Target Groups
-├── asg.tf                # Launch Template & Auto Scaling Group setup
-├── rds.tf                # Multi-AZ Relational Database Instance & Subnet Groups
-├── s3.tf                 # S3 Buckets for static hosting and state/logs
-├── cloudfront_route53.tf # CloudFront CDN setup & Route53 DNS routing
-├── iam.tf                # IAM Roles, Instance Profiles, and Least-Privilege Policies
-├── cloudwatch.tf         # CloudWatch Alarms & Metric Filters for monitoring
-├── cloudtrail.tf         # AWS CloudTrail for governance and API auditing
-├── sns.tf                # SNS Topics & Subscriptions for real-time alerts
-├── variables.tf          # Input variable definitions and defaults
-├── outputs.tf            # Operational outputs (Endpoints, IDs, DNS names)
-└── versions.tf           # Required Terraform and Provider versions
-
-
 ## Key Skills & AWS Services Demonstrated
 
 | Skill & AWS Service | Capability & Architectural Responsibility | Relevant Terraform File |
@@ -77,3 +57,25 @@ Upon executing `terraform apply`, the configuration exports the following operat
 * **`rds_endpoint`**: Private network connection string for database queries originating from the compute tier.
 * **`s3_bucket_name`**: Globally unique storage bucket identifier for static website assets and backend log state.
 * **`sns_topic_arn`**: Amazon Resource Name (ARN) configured for CloudWatch metrics and real-time operational notifications.
+
+## Repository Structure
+
+```text
+Terraform_3tier_webapp_AWS/
+├── vpc.tf                # VPC, Public/Private Subnets, NAT Gateways, Route Tables
+├── security_group.tf     # Security Groups for ALB, EC2, RDS, and S3 access
+├── alb.tf                # Application Load Balancer, Listener Rules, Target Groups
+├── asg.tf                # Launch Template & Auto Scaling Group setup
+├── rds.tf                # Multi-AZ Relational Database Instance & Subnet Groups
+├── s3.tf                 # S3 Buckets for static hosting and state/logs
+├── cloudfront_route53.tf # CloudFront CDN setup & Route53 DNS routing
+├── iam.tf                # IAM Roles, Instance Profiles, and Least-Privilege Policies
+├── cloudwatch.tf         # CloudWatch Alarms & Metric Filters for monitoring
+├── cloudtrail.tf         # AWS CloudTrail for governance and API auditing
+├── sns.tf                # SNS Topics & Subscriptions for real-time alerts
+├── variables.tf          # Input variable definitions and defaults
+├── outputs.tf            # Operational outputs (Endpoints, IDs, DNS names)
+└── versions.tf           # Required Terraform and Provider versions
+
+
+
