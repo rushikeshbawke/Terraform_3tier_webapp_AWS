@@ -97,7 +97,7 @@ Terraform_3tier_webapp_AWS/
 ├── sns.tf                # SNS Topics & Subscriptions for real-time alerts
 ├── variables.tf          # Input variable definitions and defaults
 ├── outputs.tf            # Operational outputs (Endpoints, IDs, DNS names)
-└── versions.tf           # Required Terraform and Provider versions
+└── terraform.tf          # Required Terraform and Provider versions backend
 
 
 
